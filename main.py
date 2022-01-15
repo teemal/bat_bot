@@ -8,11 +8,11 @@ TOKEN = os.getenv('BAT_TOKEN')
 GUILD = 'BAT Brigade'
 
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix="|>", case_insensitive=True, intents=intents)
+bot = commands.Bot(command_prefix="~", case_insensitive=True, intents=intents)
 client = discord.Client(intents=intents)
 
 
-@bot.command(name='ping', description="User sends `ping` and gets `pong!`")
+@bot.command(name='ping', description="User sends `ping` and gets `pong!`", help="ping -> pong!")
 async def ping(ctx):
     await ctx.send("pong!")
 
@@ -65,7 +65,8 @@ async def top_invite_members(ctx):
     for i in top_member_invites:
         name = i[0].name
         invites = i[1]
-        res += f'{name}: {invites}\n'
+        if invites > 0:
+            res += f'{name}: {invites}\n'
     print(res)
     await ctx.send(res)
 
