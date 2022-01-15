@@ -40,35 +40,41 @@ async def top_invite_members(ctx):
     print('getting invites...')
     invites = await guild.invites()
     print('creating datetime object...')
-    print(msg_lst)
     top_n = int(msg_lst[1])
     today = datetime.date.today()
     days = int(msg_lst[2])
     time_period = today - datetime.timedelta(days=days)
     members = []
     print('getting valid users...')
-    for i in invites:
-        inviter = i.inviter if guild in i.inviter.mutual_guilds else None
-        time_threshold = True if i.created_at.date() >= time_period else None
-        # admin_role not in member_roles or mod_role not in member_roles
-        if inviter and time_threshold:
-            if 'Admin' not in [role for role in guild.get_member(i.inviter.id).roles] or 'Moderator' not in [role for role in guild.get_member(i.inviter.id).roles] or 'Brave Team' not in [role for role in guild.get_member(i.inviter.id).roles]:
-                members.append(
-                    (
-                        inviter, i.uses
-                    )
-                )
+    members = get_qualifying_members(members, invites, guild, time_period)
     print('Getting top members...')
     top_member_invites = sorted(members, key = lambda x: x[1], reverse = True)[:top_n]
     print('Creating response...')
     res = f'**Top {top_n} member invites in the last {days} days are:**\n'
+    res = build_response(res, top_member_invites)
+    print(res)
+    await ctx.send(res)
+
+def build_response(res, top_member_invites):
     for i in top_member_invites:
         name = i[0].name
         invites = i[1]
         if invites > 0:
             res += f'{name}: {invites}\n'
-    print(res)
-    await ctx.send(res)
+    return res
+
+def get_qualifying_members(members_list, invites, guild, time_period):
+    for i in invites:
+        inviter = i.inviter if guild in i.inviter.mutual_guilds else None
+        time_threshold = True if i.created_at.date() >= time_period else None
+        if inviter and time_threshold:
+            if 'Admin' not in [role for role in guild.get_member(i.inviter.id).roles] or 'Moderator' not in [role for role in guild.get_member(i.inviter.id).roles] or 'Brave Team' not in [role for role in guild.get_member(i.inviter.id).roles]:
+                members_list.append(
+                    (
+                        inviter, i.uses
+                    )
+                )
+    return members_list
 
 async def handle_top_invite_messages(ctx, msg_lst):
     if len(msg_lst) != 3:
